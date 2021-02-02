@@ -36,13 +36,28 @@ function qa_q_list_page_content($questions, $pagesize, $start, $count, $sometitl
 		$pagelinkparams= array("sort" => "featured");
 		$categorytitlehtml = qa_html($navcategories[$categoryid]['title']);		 
 		$sometitle = $categoryid != null ? qa_lang_html_sub('featured_lang/featured_qs_in_x', $categorytitlehtml) : qa_lang_html('featured_lang/featured_qs_title');
-		$nonetitle = $categoryid != null ? qa_lang_html_sub('featured_lang/nofeatured_qs_in_x', $categorytitlehtml) : qa_lang_html('featured_lang/nofeatured_qs_title');
+		if($request === 'questions')
+		{
+			$nonetitle = $categoryid != null ? qa_lang_html_sub('featured_lang/nofeatured_qs_in_x', $categorytitlehtml) : qa_lang_html('featured_lang/nofeatured_qs_title');
+		}
+		else
+		{
+			$nonetitle = $categoryid != null ? qa_lang_html_sub('featured_lang/nofeatured_qs_un_in_x', $categorytitlehtml) : qa_lang_html('featured_lang/nofeatured_qs_un_title');
+		}
 		$feedpathprefix =  null;
+			$list = "featured_qcount";
+			$listc = "fcount";
+		if($request == "unanswered")
+		{
+			$list.= "_un";
+			$listc .= "_in";
+
+		}
 		if(!$categoryid){
-			$count=qa_opt('feeatured_qcount');
+			$count=qa_opt($list);
 		}
 		else{
-			$count = qa_db_categorymeta_get($categoryid, 'fcount');			
+			$count = qa_db_categorymeta_get($categoryid, $listc);			
 		}
 	}
 
@@ -69,6 +84,9 @@ function updatefeaturedcount($postid)
 	$count = qa_db_read_one_value($query);
 	qa_opt('featured_qcount', $count);
 	category_path_fqcount_update($postid);
+	$query = qa_db_query_sub("select count(*) from ^postmetas a, ^posts b where a.postid=b.postid and b.acount = 0 and a.title like 'featured'");
+	$count = qa_db_read_one_value($query);
+	qa_opt('featured_qcount_un', $count);
 }
 
 
@@ -85,6 +103,14 @@ function ifcategory_fqcount_update($categoryid)
 		$count = qa_db_read_one_value($query);
 
 		qa_db_categorymeta_set($categoryid, 'fcount', $count);
+		$filter .=" and acount = 0";
+		$query = qa_db_query_sub(
+				"select GREATEST( (SELECT COUNT(*) FROM ^posts WHERE categoryid=# AND type='Q'".$filter."), (SELECT COUNT(*) FROM ^posts WHERE catidpath1=# AND type='Q'".$filter."), (SELECT COUNT(*) FROM ^posts WHERE catidpath2=# AND type='Q'".$filter."), (SELECT COUNT(*) FROM ^posts WHERE catidpath3=# AND type='Q'".$filter.") ) ",
+				$categoryid, $categoryid, $categoryid, $categoryid
+				); // requires QA_CATEGORY_DEPTH=4
+		$count = qa_db_read_one_value($query);
+
+		qa_db_categorymeta_set($categoryid, 'fcount_un', $count);
 	}
 }
 
