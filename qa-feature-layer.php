@@ -45,7 +45,7 @@ class qa_html_theme_layer extends qa_html_theme_base {
 
 	public function q_item_title($q_item)
 	{
-		if(qa_opt("qa_featured_enable_user_reads") &&( ($this->template == 'questions') || ($this->template == 'activity'))  ){
+		if(qa_opt("qa_featured_enable_user_reads") &&( ($this->template == 'questions') || ($this->template == 'unanswered') || ($this->template == 'question') || ($this->template == 'activity'))  ){
 			$this->output(
 				'<div class="qa-q-item-title');
 			if(isset($q_item['raw']['readid']))
@@ -70,6 +70,7 @@ class qa_html_theme_layer extends qa_html_theme_base {
 			if(qa_is_logged_in())// && isset($q_view['raw']))
 			{
 				$postid=$q_view['raw']['postid'];
+				$q_view['form']['fields']['postid'] = array("tags" => "name='postid' value='$postid' type='hidden'"); 
 				if(qa_opt("qa_featured_enable_user_reads")){
 					$query = "select postid from ^userreads where userid = # and postid = #";
 					$result = qa_db_query_sub($query, qa_get_logged_in_userid(), $postid);
@@ -77,10 +78,10 @@ class qa_html_theme_layer extends qa_html_theme_base {
 					if(!$id)
 						//if(qa_db_postmeta_get($postid, "featured") == null)
 					{
-						$q_view['form']['buttons'][] = array("tags" => "name='read-button' value='$postid' title='".qa_lang_html('featured_lang/read_pop')."'", "label" => qa_lang_html('featured_lang/read')); 
+						$q_view['form']['buttons']['read'] = array("tags" => "name='read-button'", "popup" => qa_lang_html('featured_lang/read_pop'), "label" => qa_lang_html('featured_lang/read')); 
 					}
 					else{
-						$q_view['form']['buttons'][] = array("tags" => "name='unread-button' value='$postid' title='".qa_lang_html('featured_lang/unread_pop')."'", "label" => qa_lang_html('featured_lang/unread')); 
+						$q_view['form']['buttons']['unread'] = array("tags" => "name='unread-button'", "popup" => qa_lang_html('featured_lang/unread_pop'), "label" => qa_lang_html('featured_lang/unread')); 
 					}
 				}
 				$user_level = qa_get_logged_in_level();
@@ -89,10 +90,10 @@ class qa_html_theme_layer extends qa_html_theme_base {
 					require_once QA_INCLUDE_DIR.'db/metas.php';
 					if(qa_db_postmeta_get($postid, "featured") == null)
 					{
-						$q_view['form']['buttons'][] = array("tags" => "name='feature-button' value='$postid' title='".qa_lang_html('featured_lang/feature_pop')."'", "label" => qa_lang_html('featured_lang/feature')); 
+						$q_view['form']['buttons'][] = array("tags" => "name='feature-button'",  "popup" => qa_lang_html('featured_lang/feature_pop'), "label" => qa_lang_html('featured_lang/feature')); 
 					}
 					else{
-						$q_view['form']['buttons'][] = array("tags" => "name='unfeature-button' value='$postid' title='".qa_lang_html('featured_lang/unfeature_pop')."'", "label" => qa_lang_html('featured_lang/unfeature')); 
+						$q_view['form']['buttons'][] = array("tags" => "name='unfeature-button'", "popup" => qa_lang_html('featured_lang/unfeature_pop'), "label" => qa_lang_html('featured_lang/unfeature')); 
 					}
 				}
 			}

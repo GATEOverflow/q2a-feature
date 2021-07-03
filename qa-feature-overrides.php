@@ -8,9 +8,9 @@ function qa_db_posts_basic_selectspec($voteuserid=null, $full=false, $user=true)
 		$res = qa_db_posts_basic_selectspec_base($voteuserid, $full, $user);
 		$res['source'] .= " join ^postmetas gfeat on ^posts.postid = gfeat.postid and gfeat.title like 'featured'";
 	}
-	if(($qa_template ===  'questions' || $qa_template ===  'unanswered' || $qa_template === 'activity') )
+	if(qa_opt("qa_featured_enable_user_reads") && (($qa_template ===  'questions') || ($qa_template ===  'unanswered') ||  ($qa_template === 'activity')|| ($qa_template ===  'question')))
 	{
-		if(qa_opt('qa_featured_enable_user_reads') && qa_get_logged_in_level()>  0)
+		if( qa_get_logged_in_level()>  0)
 		{
 			if(!$res){
 				$res = qa_db_posts_basic_selectspec_base($voteuserid, $full, $user);
@@ -125,18 +125,19 @@ function qa_check_page_clicks()
 	global  $qa_request;
 	require_once QA_INCLUDE_DIR."db/metas.php";
 	if ( qa_is_http_post() ) {
+		$postid = $_POST['postid'];	
 		if(qa_get_logged_in_level()>=  qa_opt('qa_featured_questions_level'))
 		{
 			if(isset($_POST['feature-button'])  )
 			{
-				$postid = $_POST['feature-button'];	
+			//	$postid = $_POST['feature-button'];	
 				qa_db_postmeta_set($postid, "featured", "1");
 				updatefeaturedcount($postid);
 				qa_redirect( qa_request(), $_GET );
 			}
 			if(isset($_POST['unfeature-button'])  )
 			{
-				$postid = $_POST['unfeature-button'];	
+			//	$postid = $_POST['unfeature-button'];	
 				qa_db_postmeta_clear($postid, "featured");
 				updatefeaturedcount($postid);
 				qa_redirect( qa_request(), $_GET );
@@ -146,14 +147,14 @@ function qa_check_page_clicks()
 		{
 			if(isset($_POST['read-button'])  )
 			{
-				$postid = $_POST['read-button'];	
+				//$postid = $_POST['read-button'];	
 				$query = "insert into ^userreads(userid, postid) values (#,#)";
 				qa_db_query_sub($query, qa_get_logged_in_userid(), $postid);
 				qa_redirect( qa_request(), $_GET );
 			}
 			if(isset($_POST['unread-button'])  )
 			{
-				$postid = $_POST['unread-button'];	
+				//$postid = $_POST['unread-button'];	
 				$query = "delete from ^userreads where userid = # and postid = #";
 				qa_db_query_sub($query, qa_get_logged_in_userid(), $postid);
 				qa_redirect( qa_request(), $_GET );
