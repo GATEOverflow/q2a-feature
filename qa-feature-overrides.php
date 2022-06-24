@@ -8,7 +8,7 @@ function qa_db_posts_basic_selectspec($voteuserid=null, $full=false, $user=true)
 		$res = qa_db_posts_basic_selectspec_base($voteuserid, $full, $user);
 		$res['source'] .= " join ^postmetas gfeat on ^posts.postid = gfeat.postid and gfeat.title like 'featured'";
 	}
-	if(qa_opt("qa_featured_enable_user_reads") && (($qa_template ===  'questions') || ($qa_template ===  'unanswered') ||  ($qa_template === 'activity')|| ($qa_template ===  'question')))
+	if(qa_opt("qa_featured_enable_user_reads") && (($qa_template ===  'questions') || ($qa_template ===  'unanswered') ||  ($qa_template === 'activity')|| ($qa_template ===  'question')) || ($qa_template === 'tag'))
 	{
 		if( qa_get_logged_in_level()>  0)
 		{
