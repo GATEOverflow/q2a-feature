@@ -4,7 +4,7 @@ Question2Answer Feature Questions
 -----------
 Description
 -----------
-This is a plugin for **Question2Answer** that allows featuring questions using button click for editors and above as configured in admin panel. Featured questions are shown as a tab in Question Listing pages.
+This is a plugin for **Question2Answer** that allows featuring questions using button click for editors and above as configured in admin panel. Featured questions are shown as a tab in Question Listing pages. This plugin requires custom changes to the core - so please don't use if you are not willing to do it.
 
 
 ------------
