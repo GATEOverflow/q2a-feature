@@ -45,7 +45,7 @@ class qa_html_theme_layer extends qa_html_theme_base {
 
 	public function q_item_title($q_item)
 	{
-		if(qa_opt("qa_featured_enable_user_reads") &&( ($this->template == 'questions') || ($this->template == 'unanswered') || ($this->template == 'question') || ($this->template == 'activity') || ($this->template === 'tag')  ||  ($this->template === 'question')) ){
+		if(qa_is_logged_in() && qa_opt("qa_featured_enable_user_reads") &&( ($this->template == 'questions') || ($this->template == 'unanswered') || ($this->template == 'question') || ($this->template == 'activity') || ($this->template === 'tag')  ||  ($this->template === 'question') || ($this->template === 'search')) ){
 			$this->output(
 				'<div class="qa-q-item-title');
 			if(isset($q_item['raw']['readid']))
