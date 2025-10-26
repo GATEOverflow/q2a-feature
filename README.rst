@@ -1,31 +1,69 @@
 =================================
-Question2Answer Feature Questions
+Question2Answer Feature Questions & Reading Analytics Plugin
 =================================
+
 -----------
 Description
 -----------
-This is a plugin for **Question2Answer** that allows featuring questions using button click for editors and above as configured in admin panel. Featured questions are shown as a tab in Question Listing pages.
+This is a plugin for **Question2Answer** that provides **two major functionalities**:
 
+1. **Featured Questions**  
+   - Editors and above (as configured in admin panel) can feature/unfeature questions with a button click.  
+   - Featured questions are shown as a tab in Question Listing pages.
+
+2. **Reading Analytics Suite**  
+   - Tracks what content users read (assumes a post is read when viewed).  
+   - Builds **per-user statistics** and a **global leaderboard** of readers.  
+   - Provides attractive charts and a daily leaderboard widget.
+
+---
+
+## Features
+
+### 1. **Read Page**  
+- `/read/<username>`  
+- Based on explicit **“Mark as Read”** button clicks on posts.  
+- Shows the list of questions a user has marked as read.  
+- Includes **“Mark Unread”** button to remove items.  
+- Fully integrated with category navigation and Q2A’s question list features.
+
+### 2. **Reading Stats Page**  
+- `/read-stats`  
+- Based on **automatic tracking of views** (a post view = a read).  
+- Provides **interactive charts** using CanvasJS:
+  - Reads per day
+  - Reads per category  
+- Compare multiple users on the same chart.  
+- Built-in filters:
+  - Date range (default: last 3 months, reloads if outside range)
+  - Multi-select category filter  
+- Exportable data (CanvasJS supports PNG, JPG, PDF).  
+- Info box with links to **Leaderboard** and **Read List**.
+
+### 3. **Leaderboard Page**  
+- `/read-leaderboard`  
+- Shows **top readers** in a date range (default: yesterday).  
+- Supports category filtering (multi-select).  
+- **Competition-style ranking**:
+  - If two users tie for rank 2 → both get rank 2, next rank is 4.  
+- Configurable options:
+  - Minimum reads required
+  - Maximum ranks shown (default: 20)  
+- Displays **avatars** and medals 🥇🥈🥉.
+
+### 4. **Leaderboard Widget**  
+- Sidebar widget showing **Yesterday’s Top Readers**.  
+- Configurable **number of ranks** (via admin options).  
+- Shows ties correctly.  
+- Attractive small design with medals.
+
+---
 
 ------------
 Installation
 ------------
-#. Install Question2Answer_
-#. Get the source code for this plugin from github_, either using git_, or downloading directly:
-
-   - To download using git, install git and then type 
-     ``git clone git://github.com/arjunsuresh/q2a-feature.git q2a-feature``
-     at the command prompt (on Linux, Windows is a bit different)
-   - To download directly, go to the `project page`_ and click **Download**
-
-
-.. _Question2Answer: http://www.question2answer.org/install.php
-.. _project page: https://github.com/arjunsuresh/q2a-feature
-
-----------
-Disclaimer
-----------
-This is **beta** code. It is probably okay for production environments, but may not work exactly as expected. Refunds will not be given. If it breaks, you get to keep both parts.
+1. Install Question2Answer_.
+2. Copy this plugin folder into your `qa-plugin/` directory.
 
 
 -------

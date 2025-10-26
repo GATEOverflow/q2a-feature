@@ -143,7 +143,7 @@ function qa_check_page_clicks()
 			if(isset($_POST['read-button'])  )
 			{
 				//$postid = $_POST['read-button'];	
-				$query = "insert into ^userreads(userid, postid) values (#,#)";
+				$query = "insert into ^userreads(userid, postid, marked_date) values (#,#,CURDATE())";
 				qa_db_query_sub($query, qa_get_logged_in_userid(), $postid);
 				qa_redirect( qa_request(), $_GET );
 			}

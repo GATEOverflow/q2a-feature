@@ -2,7 +2,7 @@
 
 class qa_html_theme_layer extends qa_html_theme_base {
 
-
+	private $userid;
 	function doctype(){
 		global $qa_request;
 		$request = qa_request_parts();
@@ -45,7 +45,9 @@ class qa_html_theme_layer extends qa_html_theme_base {
 
 	public function q_item_title($q_item)
 	{
+		$this->userid = qa_is_logged_in();
 		if(qa_is_logged_in() && qa_opt("qa_featured_enable_user_reads") &&( ($this->template == 'questions') || ($this->template == 'unanswered') || ($this->template == 'question') || ($this->template == 'activity') || ($this->template === 'tag')  ||  ($this->template === 'question') || ($this->template === 'search')) ){
+			$this->userid = qa_is_logged_in();
 			$this->output(
 				'<div class="qa-q-item-title');
 			if(isset($q_item['raw']['readid']))
@@ -66,8 +68,19 @@ class qa_html_theme_layer extends qa_html_theme_base {
 
 	public function q_view_buttons($q_view)
 	{
+		//For inserting a row in the userread_events table. Reading Analytics are fetching data from this table,
+		$this->userid = qa_is_logged_in();
+		if( $this->userid && ($this->template == 'question')){
+			qa_db_query_sub(
+				'INSERT IGNORE INTO ^userread_events (userid, postid, read_date) 
+				 VALUES (#, #, CURRENT_DATE)',
+				$this->userid,
+				$q_view['raw']['postid']
+			);
+
+		}
 		if (($this->template == 'question') && (!empty($q_view['form']))) {
-			if(qa_is_logged_in())// && isset($q_view['raw']))
+			if($this->userid)// && isset($q_view['raw']))
 			{
 				$postid=$q_view['raw']['postid'];
 				$q_view['form']['fields']['postid'] = array("tags" => "name='postid' value='$postid' type='hidden'"); 
@@ -100,6 +113,42 @@ class qa_html_theme_layer extends qa_html_theme_base {
 
 		}
 		qa_html_theme_base::q_view_buttons($q_view);
+	}
+
+   /* ============================================
+       For Navigation in the user account
+    ============================================ */	
+	public function nav($navtype, $level = null)
+	{
+		// Only modify when the user profile sub navigation exists
+		if (isset($this->content['navigation']['sub']['profile'])) {
+
+			$guest_handle = qa_get_logged_in_handle();
+			$user_handle = qa_request_part(1) ?qa_request_part(1): $guest_handle;
+
+			// Access control: show for own profile or admin
+			$isMy = ($user_handle === $guest_handle);
+			$isAuthorized = (qa_get_logged_in_level() >= QA_USER_LEVEL_ADMIN);
+
+			if ($isMy || $isAuthorized) {
+				// Build User Reads sub-navigation item
+				$usernotes_sub_nav = [
+					'user_reads' => [
+						'label' => qa_lang_html('featured_lang/all_read'),
+						'url'   => qa_path_html('read/' . $user_handle, null, qa_opt('site_url')),
+						'selected' => (
+							qa_request_part(0) === 'mark-read'
+						),
+					],
+				];
+
+				// Insert into sub-navigation after existing items
+				qa_array_insert($this->content['navigation']['sub'], null, $usernotes_sub_nav);
+			}
+		}
+
+		// Continue rendering default navigation
+		qa_html_theme_base::nav($navtype, $level);
 	}
 
 
