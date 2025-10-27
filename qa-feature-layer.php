@@ -69,13 +69,14 @@ class qa_html_theme_layer extends qa_html_theme_base {
 	{
 		//For inserting a row in the userread_events table. Reading Analytics are fetching data from this table,
 		
-		if( qa_is_logged_in() && ($this->template == 'question')){
+		if( qa_get_logged_in_userid() && ($this->template == 'question')){
 			qa_db_query_sub(
 				'INSERT IGNORE INTO ^userread_events (userid, postid, read_date) 
 				 VALUES (#, #, CURRENT_DATE)',
-				qa_is_logged_in(),
+				qa_get_logged_in_userid(),
 				$q_view['raw']['postid']
 			);
+		error_log(qa_get_logged_in_userid()." is the logged user");
 
 		}
 		if (($this->template == 'question') && (!empty($q_view['form']))) {
