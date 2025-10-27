@@ -45,9 +45,8 @@ class qa_html_theme_layer extends qa_html_theme_base {
 
 	public function q_item_title($q_item)
 	{
-		$this->userid = qa_is_logged_in();
 		if(qa_is_logged_in() && qa_opt("qa_featured_enable_user_reads") &&( ($this->template == 'questions') || ($this->template == 'unanswered') || ($this->template == 'question') || ($this->template == 'activity') || ($this->template === 'tag')  ||  ($this->template === 'question') || ($this->template === 'search')) ){
-			$this->userid = qa_is_logged_in();
+			
 			$this->output(
 				'<div class="qa-q-item-title');
 			if(isset($q_item['raw']['readid']))
@@ -69,18 +68,18 @@ class qa_html_theme_layer extends qa_html_theme_base {
 	public function q_view_buttons($q_view)
 	{
 		//For inserting a row in the userread_events table. Reading Analytics are fetching data from this table,
-		$this->userid = qa_is_logged_in();
-		if( $this->userid && ($this->template == 'question')){
+		
+		if( qa_is_logged_in() && ($this->template == 'question')){
 			qa_db_query_sub(
 				'INSERT IGNORE INTO ^userread_events (userid, postid, read_date) 
 				 VALUES (#, #, CURRENT_DATE)',
-				$this->userid,
+				qa_is_logged_in(),
 				$q_view['raw']['postid']
 			);
 
 		}
 		if (($this->template == 'question') && (!empty($q_view['form']))) {
-			if($this->userid)// && isset($q_view['raw']))
+			if(qa_is_logged_in())// && isset($q_view['raw']))
 			{
 				$postid=$q_view['raw']['postid'];
 				$q_view['form']['fields']['postid'] = array("tags" => "name='postid' value='$postid' type='hidden'"); 
