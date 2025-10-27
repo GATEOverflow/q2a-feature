@@ -76,7 +76,7 @@ class qa_html_theme_layer extends qa_html_theme_base {
 				qa_get_logged_in_userid(),
 				$q_view['raw']['postid']
 			);
-		error_log(qa_get_logged_in_userid()." is the logged user");
+		//error_log(qa_get_logged_in_userid()." is the logged user");
 
 		}
 		if (($this->template == 'question') && (!empty($q_view['form']))) {
