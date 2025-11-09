@@ -14,6 +14,8 @@ class qa_feature_admin {
 				return 20;
 			case 'leaderboard_widget_count':
                 return 3; // default top 3
+			case 'user_read_allowed_categories':
+				return '';
 			default:
 				return null;				
 		}
@@ -94,6 +96,8 @@ class qa_feature_admin {
 			qa_opt('leaderboard_min_reads', (int)qa_post_text('leaderboard_min_reads'));
 			qa_opt('leaderboard_max_users', (int)qa_post_text('leaderboard_max_users'));
 			qa_opt('leaderboard_widget_count', (int)qa_post_text('leaderboard_widget_count'));
+			$allowed_cats = qa_post_array('allowed_cats'); // safely get array of selected checkboxes
+			qa_opt('user_read_allowed_categories', implode(',', (array)$allowed_cats));
 			$ok = qa_lang('admin/options_saved');
 		}
 		$showoptions = array(
@@ -103,6 +107,35 @@ class qa_feature_admin {
 				QA_USER_LEVEL_ADMIN =>  "Admins",
 				QA_USER_LEVEL_SUPER =>  "Super Admins",
 				);
+
+		// --- Fetch all categories that do not have child categories ---
+        $categories = qa_db_read_all_assoc(
+			qa_db_query_sub(
+				'SELECT c.categoryid, c.title
+				 FROM ^categories AS c
+				 WHERE NOT EXISTS (
+					 SELECT 1 FROM ^categories AS sub
+					 WHERE sub.parentid = c.categoryid
+				 )
+				 ORDER BY c.title'
+			)
+		);
+
+
+        // --- Current saved categories ---
+        $selected = explode(',', qa_opt('user_read_allowed_categories'));
+        $selected = array_filter($selected);
+
+        // --- Build checkbox list ---
+        $checkboxes = '';
+        foreach ($categories as $cat) {
+            $checked = in_array($cat['categoryid'], $selected) ? 'checked' : '';
+            $checkboxes .=
+                '<label style="display:block;margin:2px 0;">' .
+                '<input type="checkbox" name="allowed_cats[]" value="' . (int)$cat['categoryid'] . '" ' . $checked . '>' .
+                ' ' . qa_html($cat['title']) .
+                '</label>';
+        }
 
 		// Create the form for display
 
@@ -132,6 +165,11 @@ class qa_feature_admin {
 				'type' => 'number',
 				'value' => qa_html(qa_opt('leaderboard_min_reads')),
 				'tags' => 'name="leaderboard_min_reads"',
+				);
+		$fields[] = array(
+                'label' => 'Select categories users are allowed to read:',
+                'type'  => 'custom',
+                'html'  => $checkboxes ?: '<em>No categories defined.</em>',
 				);
 
 		$fields[] = array(

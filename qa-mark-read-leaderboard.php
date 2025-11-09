@@ -14,9 +14,20 @@ class mark_read_leaderboard {
         $maxRank   = (int)qa_opt('leaderboard_max_users');
 
         // Load categories
-        $categories = qa_db_read_all_assoc(qa_db_query_sub(
-            'SELECT categoryid, title FROM ^categories ORDER BY title ASC'
-        ));
+		$allowed_cats = array_filter(array_map('trim', explode(',', qa_opt('user_read_allowed_categories'))));
+
+		if (count($allowed_cats)) {
+			$placeholders = implode(',', array_fill(0, count($allowed_cats), '$'));
+			$query = qa_db_query_sub(
+				'SELECT categoryid, title FROM ^categories WHERE categoryid IN (' . $placeholders . ') ORDER BY title',
+				...$allowed_cats
+			);
+		} else {
+			// No restriction (empty option)
+			$query = qa_db_query_sub('SELECT categoryid, title FROM ^categories ORDER BY title');
+		}
+
+		$categories = qa_db_read_all_assoc($query);
 
         // Load all user reads in range (with category)
         $rows = qa_db_read_all_assoc(qa_db_query_sub(
