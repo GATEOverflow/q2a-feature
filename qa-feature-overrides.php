@@ -6,7 +6,9 @@ function qa_db_posts_basic_selectspec($voteuserid=null, $full=false, $user=true)
 	if(($qa_template ===  'questions' || $qa_template ===  'unanswered') && (qa_get('sort') == 'featured') )
 	{
 		$res = qa_db_posts_basic_selectspec_base($voteuserid, $full, $user);
-		$res['source'] .= " join ^postmetas gfeat on ^posts.postid = gfeat.postid and gfeat.title like 'featured'";
+		$res['source'] .= " left join ^postmetas gfeat on ^posts.postid = gfeat.postid and gfeat.title like 'featured'";
+		$res['columns']['sp_is_featured'] = "gfeat.postid IS NOT NULL";
+		$res['columns']['sp_interaction_score'] = '(CAST(^posts.acount AS SIGNED) * 3 + CAST(^posts.netvotes AS SIGNED) * 2 + FLOOR(CAST(^posts.views AS SIGNED) / 10))';
 	}
 	if(qa_is_logged_in() && qa_opt("qa_featured_enable_user_reads") && (($qa_template ===  'questions') || ($qa_template ===  'unanswered') ||  ($qa_template === 'activity')|| ($qa_template ===  'question') || ($qa_template === 'tag') || ($qa_template === 'search')))
 	{
@@ -14,7 +16,7 @@ function qa_db_posts_basic_selectspec($voteuserid=null, $full=false, $user=true)
 				$res = qa_db_posts_basic_selectspec_base($voteuserid, $full, $user);
 			}
 			$userid = qa_get_logged_in_userid();
-			$res['columns'][] = "ureads.postid as readid";
+			$res['columns']['readid'] = "ureads.postid";
 			$res['source'] .= " left join ^userreads ureads on ^posts.postid = ureads.postid and ureads.userid = $userid";
 	}
 	if($res)
@@ -42,20 +44,6 @@ function qa_q_list_page_content($questions, $pagesize, $start, $count, $sometitl
 			$nonetitle = $categoryid != null ? qa_lang_html_sub('featured_lang/nofeatured_qs_un_in_x', $categorytitlehtml) : qa_lang_html('featured_lang/nofeatured_qs_un_title');
 		}
 		$feedpathprefix =  null;
-			$list = "featured_qcount";
-			$listc = "fcount";
-		if($request == "unanswered")
-		{
-			$list.= "_un";
-			$listc .= "_in";
-
-		}
-		if(!$categoryid){
-			$count=qa_opt($list);
-		}
-		else{
-			$count = qa_db_categorymeta_get($categoryid, $listc);			
-		}
 	}
 
 	return qa_q_list_page_content_base($questions, $pagesize, $start, $count, $sometitle, $nonetitle,
