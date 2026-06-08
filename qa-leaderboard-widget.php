@@ -89,6 +89,17 @@ class qa_leaderboard_widget {
             .qa-leaderboard-widget .lb-row {
                 margin: 4px 0;
             }
+            html:not([data-theme="light"]) .qa-leaderboard-widget {
+                background: rgb(255 255 255 / 6%);
+                border-color: rgb(255 255 255 / 12%);
+                color: inherit;
+            }
+            html:not([data-theme="light"]) .qa-leaderboard-widget h3 {
+                color: #64b5f6;
+            }
+            html:not([data-theme="light"]) .qa-leaderboard-widget a {
+                color: #6cb4ff;
+            }
         </style></div>');
     }
 }
