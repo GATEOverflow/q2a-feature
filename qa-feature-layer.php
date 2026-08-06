@@ -38,7 +38,111 @@ class qa_html_theme_layer extends qa_html_theme_base {
 	{
 		qa_html_theme_base::head_css();
 		if(qa_opt("qa_featured_enable_user_reads")){
-			$this->output('<style type="text/css">'.qa_opt('qa_featured_css').' </style>');
+			$this->output('<style type="text/css">');
+			$this->output('
+/* --- Mark Read Indicator (Light Mode) --- */
+.qa-q-item-title.qa-q-read {
+	position: relative;
+	padding-left: 14px;
+	border-left: 3px solid #9c16a3;
+}
+.qa-q-item-title.qa-q-read::before {
+	content: "\2713";
+	position: absolute;
+	left: -22px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 20px;
+	height: 20px;
+	background: linear-gradient(135deg, #1246f1, #22c5a7);
+	border-radius: 50%;
+	color: #fff;
+	font-size: 11px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 2px 6px rgba(22,163,74,0.3);
+	animation: qa-read-pop 0.3s ease;
+}
+.qa-q-item-title.qa-q-read a {
+	color: #15803d;
+}
+
+/* Question View Page - Read Badge */
+.qa-read-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	margin-bottom: 10px;
+	padding: 4px 12px;
+	background: #ecfdf5;
+	border: 1px solid #a7f3d0;
+	border-radius: 16px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #065f46;
+	line-height: 1;
+}
+.qa-read-badge::before {
+	content: "\2713";
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	background: #16a34a;
+	color: #fff;
+	border-radius: 50%;
+	font-size: 10px;
+	font-weight: 700;
+}
+
+/* Question View - Green sidebar */
+.qa-q-view.qa-q-view-read {
+	border-left: 4px solid #16a34a !important;
+}
+
+@keyframes qa-read-pop {
+	0% { transform: translateY(-50%) scale(0); opacity: 0; }
+	70% { transform: translateY(-50%) scale(1.15); }
+	100% { transform: translateY(-50%) scale(1); opacity: 1; }
+}
+
+/* --- Dark Mode --- */
+html[data-theme="dark"] .qa-q-item-title.qa-q-read {
+	border-left-color: #4ade80;
+}
+html[data-theme="dark"] .qa-q-item-title.qa-q-read::before {
+	background: linear-gradient(135deg, #22c55e, #4ade80);
+	
+	box-shadow: 0 2px 8px rgba(74,222,128,0.35);
+}
+html[data-theme="dark"] .qa-q-item-title.qa-q-read a {
+	color: #86efac;
+}
+html[data-theme="dark"] .qa-read-badge {
+	background: #052e16;
+	border-color: #166534;
+	color: #86efac;
+}
+html[data-theme="dark"] .qa-read-badge::before {
+	background: #4ade80;
+	color: #052e16;
+}
+html[data-theme="dark"] .qa-q-view.qa-q-view-read {
+	border-left-color: #4ade80 !important;
+}
+html[data-theme="dark"] .qa-q-read {
+	background-color: transparent !important;
+}
+');
+			// Allow admin CSS customizations to override (light mode only)
+			$custom_css = qa_opt('qa_featured_css');
+			if (!empty($custom_css)) {
+				$this->output('html:not([data-theme="dark"]) ' . $custom_css);
+			}
+			$this->output('</style>');
 		}
 
 	}
@@ -64,6 +168,29 @@ class qa_html_theme_layer extends qa_html_theme_base {
 	}
 
 
+
+	public function q_view($q_view)
+	{
+		if (!empty($q_view) && qa_is_logged_in() && qa_opt('qa_featured_enable_user_reads') && $this->template == 'question') {
+			$postid = $q_view['raw']['postid'];
+			$query = "select postid from ^userreads where userid = # and postid = #";
+			$result = qa_db_query_sub($query, qa_get_logged_in_userid(), $postid);
+			$id = qa_db_read_one_value($result, true);
+			if ($id) {
+				$q_view['_is_read'] = true;
+				$q_view['classes'] = (isset($q_view['classes']) ? $q_view['classes'] . ' ' : '') . 'qa-q-view-read';
+			}
+		}
+		qa_html_theme_base::q_view($q_view);
+	}
+
+	public function q_view_main($q_view)
+	{
+		if (!empty($q_view['_is_read'])) {
+			$this->output('<span class="qa-read-badge">Marked as Read</span>');
+		}
+		qa_html_theme_base::q_view_main($q_view);
+	}
 
 	public function q_view_buttons($q_view)
 	{
