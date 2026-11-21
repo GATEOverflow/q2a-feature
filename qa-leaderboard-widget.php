@@ -14,47 +14,20 @@ class qa_leaderboard_widget {
         $maxRank = (int)qa_opt('leaderboard_widget_count');
         if ($maxRank < 1) $maxRank = 3; // fallback
 
-        // Get ALL users for yesterday, sorted by read_count
-        $rows = qa_db_read_all_assoc(qa_db_query_sub(
-            'SELECT u.userid, u.handle, COUNT(ur.postid) AS read_count
-             FROM ^userread_events ur
-             JOIN ^users u ON u.userid = ur.userid
-             WHERE ur.read_date = $
-             GROUP BY u.userid, u.handle
-             ORDER BY read_count DESC, u.handle ASC',
-            $yesterday
-        ));
+        // Yesterday's counts are final, so rank once per day
+        $cacheKey = $yesterday . ':' . $maxRank;
+        $cached = json_decode((string)qa_opt('leaderboard_widget_cache'), true);
+        if (is_array($cached) && ($cached['key'] ?? '') === $cacheKey) {
+            $rowsToShow = $cached['rows'];
+        } else {
+            $rowsToShow = $this->top_readers($yesterday, $maxRank);
+            qa_opt('leaderboard_widget_cache', json_encode(['key' => $cacheKey, 'rows' => $rowsToShow]));
+        }
 
-        if (empty($rows)) {
+        if (empty($rowsToShow)) {
             $themeobject->output('<div class="qa-leaderboard-widget">' . qa_lang_html('featured_lang/no_results') . '</div>');
             return;
         }
-
-        // --- Assign competition ranks (1,2,2,4,…) ---
-        $ranked = [];
-        $pos = 0;
-        $prevCount = null;
-        $prevRank  = 0;
-        foreach ($rows as $row) {
-            $pos++;
-            $count = (int)$row['read_count'];
-            if ($prevCount === null) {
-                $rank = 1;
-            } elseif ($count === $prevCount) {
-                $rank = $prevRank;
-            } else {
-                $rank = $pos;
-            }
-            $row['_rank'] = $rank;
-            $ranked[] = $row;
-            $prevCount = $count;
-            $prevRank  = $rank;
-        }
-
-        // --- Keep only ranks ≤ maxRank ---
-        $rowsToShow = array_filter($ranked, function($r) use ($maxRank) {
-            return $r['_rank'] <= $maxRank;
-        });
 
         // --- Output ---
         $themeobject->output('<div class="qa-leaderboard-widget">');
@@ -101,5 +74,46 @@ class qa_leaderboard_widget {
                 color: #6cb4ff;
             }
         </style></div>');
+    }
+
+    // Readers with competition ranks (1,2,2,4,…) up to $maxRank
+    private function top_readers($date, $maxRank) {
+        $rows = qa_db_read_all_assoc(qa_db_query_sub(
+            'SELECT ur.userid, COUNT(*) AS read_count
+             FROM ^userread_events ur
+             WHERE ur.read_date = $
+             GROUP BY ur.userid
+             ORDER BY read_count DESC
+             LIMIT #',
+            $date, $maxRank
+        ));
+        if (empty($rows)) {
+            return [];
+        }
+        $cutoff = (int)end($rows)['read_count'];
+
+        $rows = qa_db_read_all_assoc(qa_db_query_sub(
+            'SELECT u.userid, u.handle, x.read_count
+             FROM (SELECT userid, COUNT(*) AS read_count FROM ^userread_events WHERE read_date = $ GROUP BY userid HAVING read_count >= #) x
+             JOIN ^users u ON u.userid = x.userid
+             ORDER BY x.read_count DESC, u.handle ASC',
+            $date, $cutoff
+        ));
+
+        $out = [];
+        $prevCount = null;
+        $rank = 0;
+        foreach ($rows as $pos => $row) {
+            $count = (int)$row['read_count'];
+            if ($count !== $prevCount) {
+                $rank = $pos + 1;
+            }
+            if ($rank > $maxRank) {
+                break;
+            }
+            $prevCount = $count;
+            $out[] = ['handle' => $row['handle'], 'read_count' => $count, '_rank' => $rank];
+        }
+        return $out;
     }
 }
