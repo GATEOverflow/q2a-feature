@@ -59,6 +59,7 @@ class mark_read_leaderboard {
         }
 
         $content = qa_content_prepare();
+        $content['description'] = 'Leaderboard of GATE Overflow users by the number of questions they have read and marked while preparing for GATE CSE.';
         $content['title'] = qa_lang('featured_lang/leaderboard_title');
 
         // Filter controls
